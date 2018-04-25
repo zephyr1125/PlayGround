@@ -11,12 +11,14 @@ public class Tile : MonoBehaviour
 
 	private TileManager _tileManager;
 	
-	public Image Image;
+	public Image Image, WestWall, NorthWall;
 	public TMP_Text Text;
 
 	public float CurrentTemperature, PreTemperature;
 
 	private bool _isContinue;
+
+	public bool HasWestWall, HasNorthWall;
 
 	public void Init(Vector2Int pos)
 	{
@@ -26,10 +28,46 @@ public class Tile : MonoBehaviour
 		PreTemperature = _tileManager.DefaultTemperature;
 	}
 
+	public void OnClick()
+	{
+		switch (_tileManager.ClickState)
+		{
+			case TileManager.ClickStateEnum.ClickSetSource:
+				SetSource();
+				break;
+			case TileManager.ClickStateEnum.ClickSetWall:
+				SetWall();
+				break;
+		}
+	}
+	
 	public void SetSource()
 	{
 		SetTemperature(_tileManager.SourceTemperature);
 		_isContinue = _tileManager.IsCenterContinue;
+	}
+
+	public void SetWall()
+	{
+		if (HasNorthWall && HasWestWall)
+		{
+			HasWestWall = false;
+			HasNorthWall = false;
+		}else if (HasNorthWall)
+		{
+			HasWestWall = true;
+		}else if (HasWestWall)
+		{
+			HasWestWall = false;
+			HasNorthWall = true;
+		}
+		else
+		{
+			HasWestWall = true;
+		}
+		
+		NorthWall.gameObject.SetActive(HasNorthWall);
+		WestWall.gameObject.SetActive(HasWestWall);
 	}
 
 	private void SetTemperature(float temperature)
@@ -49,7 +87,7 @@ public class Tile : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 算法1: 使自己直接等于周围温度的平均值,0.1的阻尼
+	/// 算法1: 使自己直接等于周围温度的平均值,0.1的阻尼, 墙视为对面与自己温度一样
 	/// </summary>
 	public void Step()
 	{
@@ -63,6 +101,31 @@ public class Tile : MonoBehaviour
 		float average = 0;
 		foreach (var neighbour in neighbours)
 		{
+			//如果邻居是墙对面,则使用我自己的温度
+			if (HasWestWall && neighbour.Pos.x == Pos.x - 1)
+			{
+				average += PreTemperature;
+				continue;
+			}
+			
+			if (HasNorthWall && neighbour.Pos.y == Pos.y + 1)
+			{
+				average += PreTemperature;
+				continue;
+			}
+			
+			if (neighbour.HasWestWall && neighbour.Pos.x == Pos.x + 1)
+			{
+				average += PreTemperature;
+				continue;
+			}
+			
+			if (neighbour.HasNorthWall && neighbour.Pos.y == Pos.y - 1)
+			{
+				average += PreTemperature;
+				continue;
+			}
+			
 			average += neighbour.PreTemperature;
 		}
 

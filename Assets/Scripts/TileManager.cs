@@ -25,6 +25,14 @@ public class TileManager : Singleton<TileManager>
     private bool _isSimulating;
 
     public float SourceTemperature;
+    
+    public enum ClickStateEnum
+    {
+        ClickSetSource,
+        ClickSetWall
+    }
+
+    public ClickStateEnum ClickState;
 
     public void Start()
     {
@@ -65,6 +73,11 @@ public class TileManager : Singleton<TileManager>
     {
         var temp = float.Parse(temperature);
         SourceTemperature = temp;
+    }
+
+    public void OnChangeClickState(int clickState)
+    {
+        ClickState = (ClickStateEnum) clickState;
     }
 
     public void OnStep()
