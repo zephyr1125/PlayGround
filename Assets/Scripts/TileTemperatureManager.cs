@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.AI;
 
-public class TileManager : Singleton<TileManager>
+public class TileTemperatureManager : Singleton<TileTemperatureManager>
 {
     public float DefaultTemperature;
 
-    public Canvas Canvas;
+    public Transform Map;
 
     public Vector2Int Size;
 
     public GameObject TilePrefab;
 
-    private Tile[,] _tiles;
+    private TileTemperature[,] _tiles;
 
     public bool IsCenterContinue;
 
@@ -25,11 +25,14 @@ public class TileManager : Singleton<TileManager>
     private bool _isSimulating;
 
     public float SourceTemperature;
+
+    public float HalfWallRate;
     
     public enum ClickStateEnum
     {
         ClickSetSource,
-        ClickSetWall
+        ClickSetHalfWall,
+        ClickSetWholeWall
     }
 
     public ClickStateEnum ClickState;
@@ -41,15 +44,15 @@ public class TileManager : Singleton<TileManager>
     
     public void CreateBoard()
     {
-        _tiles = new Tile[Size.x,Size.y];
+        _tiles = new TileTemperature[Size.x,Size.y];
         for (int j = 0; j < Size.y; j++)
         {
             for (int i = 0; i < Size.x; i++)
             {
-                _tiles[i,j] = Instantiate(TilePrefab).GetComponent<Tile>();
+                _tiles[i,j] = Instantiate(TilePrefab).GetComponent<TileTemperature>();
                 _tiles[i,j].Init(new Vector2Int(i,j));
                 _tiles[i, j].gameObject.name = "Tile(" + i + "," + j + ")";
-                _tiles[i,j].GetComponent<Transform>().SetParent(Canvas.transform);
+                _tiles[i,j].GetComponent<Transform>().SetParent(Map);
                 _tiles[i,j].transform.localPosition = new Vector3(i*32 - Size.x*16, j*32 - Size.y*16);
             }
         }
@@ -80,6 +83,14 @@ public class TileManager : Singleton<TileManager>
         ClickState = (ClickStateEnum) clickState;
     }
 
+    public void OnReset()
+    {
+        foreach (var tile in _tiles)
+        {
+            tile.Reset();
+        }
+    }
+    
     public void OnStep()
     {
         //先统一存入上一tick温度
@@ -118,9 +129,9 @@ public class TileManager : Singleton<TileManager>
         }
     }
     
-    public Tile[] GetNeighbours(Vector2Int pos)
+    public TileTemperature[] GetNeighbours(Vector2Int pos)
     {
-        var result = new List<Tile>();
+        var result = new List<TileTemperature>();
         
         result.Add(GetTile(new Vector2Int(pos.x-1, pos.y)));
         result.Add(GetTile(new Vector2Int(pos.x+1, pos.y)));
@@ -130,7 +141,7 @@ public class TileManager : Singleton<TileManager>
         return result.FindAll(tile => tile != null).ToArray();
     }
 
-    private Tile GetTile(Vector2Int pos)
+    private TileTemperature GetTile(Vector2Int pos)
     {
         if (pos.x < 0 || pos.x >= Size.x)
         {
