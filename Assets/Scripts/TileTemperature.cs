@@ -9,8 +9,7 @@ public class TileTemperature : MonoBehaviour
 {
 	public Vector2Int Pos;
 
-	private TileTemperatureManager _tileManager;
-	
+	private TileTemperatureManager _tileManager; 
 	public Image Image, WestWholeWall, NorthWholeWall, WestHalfWall, NorthHalfWall;
 	public TMP_Text Text;
 
